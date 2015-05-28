@@ -55,10 +55,12 @@
                         </goals>
                     </execution>
                 </executions>
+                <!--
                 <configuration>
                     <scalaCompatVersion>${scala.binary.version}</scalaCompatVersion>
                     <scalaVersion>${scala.version}</scalaVersion>
                 </configuration>
+                -->
             </plugin>
         </plugins>
     </build>
