@@ -16,6 +16,8 @@ object SparkSignal {
     val sc = new SparkContext(conf)
     val contents = sc.textFile(path)
 
+
+
     val counts = contents.flatMap(line => line.split(" "))
       .map(word => (word, 1))
       .reduceByKey(_ + _)
