@@ -28,61 +28,37 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>src/main/scala</sourceDirectory>
-        <testSourceDirectory>src/test/scala</testSourceDirectory>
-
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>net.alchim31.maven</groupId>
-                    <artifactId>scala-maven-plugin</artifactId>
-                    <version>3.2.0</version>
-                    <configuration>
-                        <scalaCompatVersion>${scala.binary.version}</scalaCompatVersion>
-                        <scalaVersion>${scala.version}</scalaVersion>
-                    </configuration>
-
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.0.2</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <version>2.15.2</version>
                 <executions>
                     <execution>
-                        <id>scala-compile-first</id>
-                        <phase>process-resources</phase>
+                        <id>compile</id>
                         <goals>
-                            <goal>add-source</goal>
                             <goal>compile</goal>
                         </goals>
+                        <phase>compile</phase>
                     </execution>
                     <execution>
-                        <id>scala-test-compile</id>
-                        <phase>process-test-resources</phase>
+                        <id>test-compile</id>
                         <goals>
                             <goal>testCompile</goal>
                         </goals>
+                        <phase>test-compile</phase>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <executions>
                     <execution>
-                        <phase>compile</phase>
+                        <phase>process-resources</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <scalaCompatVersion>${scala.binary.version}</scalaCompatVersion>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                </configuration>
             </plugin>
         </plugins>
     </build>
