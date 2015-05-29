@@ -1,5 +1,7 @@
 package edu.appstate.cs
 
+import java.io.File
+
 import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.SparkContext._
 
@@ -16,7 +18,7 @@ object SparkSignal {
     val sc = new SparkContext(conf)
     val contents = sc.textFile(path)
 
-
+    val wav: WavFile = WavFile.openWavFile(new File(""))
 
     val counts = contents.flatMap(line => line.split(" "))
       .map(word => (word, 1))
