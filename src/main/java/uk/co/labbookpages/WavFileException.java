@@ -1,3 +1,5 @@
+package uk.co.labbookpages;
+
 public class WavFileException extends Exception
 {
 	public WavFileException()

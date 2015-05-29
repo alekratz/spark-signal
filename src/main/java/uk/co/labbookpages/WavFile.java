@@ -1,3 +1,4 @@
+package uk.co.labbookpages;
 // Wav file IO class
 // A.Greensted
 // http://www.labbookpages.co.uk
@@ -43,7 +44,7 @@ public class WavFile
 	private int bytesRead;					// Bytes read after last read into local buffer
 	private long frameCounter;				// Current number of frames read or written
 
-	// Cannot instantiate WavFile directly, must either use newWavFile() or openWavFile()
+	// Cannot instantiate uk.co.labbookpages.WavFile directly, must either use newWavFile() or openWavFile()
 	private WavFile()
 	{
 		buffer = new byte[BUFFER_SIZE];
@@ -376,7 +377,7 @@ public class WavFile
 
 	public int readFrames(int[] sampleBuffer, int offset, int numFramesToRead) throws IOException, WavFileException
 	{
-		if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
+		if (ioState != IOState.READING) throw new IOException("Cannot read from uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToRead ; f++)
 		{
@@ -401,7 +402,7 @@ public class WavFile
 
 	public int readFrames(int[][] sampleBuffer, int offset, int numFramesToRead) throws IOException, WavFileException
 	{
-		if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
+		if (ioState != IOState.READING) throw new IOException("Cannot read from uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToRead ; f++)
 		{
@@ -423,7 +424,7 @@ public class WavFile
 
 	public int writeFrames(int[] sampleBuffer, int offset, int numFramesToWrite) throws IOException, WavFileException
 	{
-		if (ioState != IOState.WRITING) throw new IOException("Cannot write to WavFile instance");
+		if (ioState != IOState.WRITING) throw new IOException("Cannot write to uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToWrite ; f++)
 		{
@@ -448,7 +449,7 @@ public class WavFile
 
 	public int writeFrames(int[][] sampleBuffer, int offset, int numFramesToWrite) throws IOException, WavFileException
 	{
-		if (ioState != IOState.WRITING) throw new IOException("Cannot write to WavFile instance");
+		if (ioState != IOState.WRITING) throw new IOException("Cannot write to uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToWrite ; f++)
 		{
@@ -472,7 +473,7 @@ public class WavFile
 
 	public int readFrames(long[] sampleBuffer, int offset, int numFramesToRead) throws IOException, WavFileException
 	{
-		if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
+		if (ioState != IOState.READING) throw new IOException("Cannot read from uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToRead ; f++)
 		{
@@ -497,7 +498,7 @@ public class WavFile
 
 	public int readFrames(long[][] sampleBuffer, int offset, int numFramesToRead) throws IOException, WavFileException
 	{
-		if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
+		if (ioState != IOState.READING) throw new IOException("Cannot read from uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToRead ; f++)
 		{
@@ -519,7 +520,7 @@ public class WavFile
 
 	public int writeFrames(long[] sampleBuffer, int offset, int numFramesToWrite) throws IOException, WavFileException
 	{
-		if (ioState != IOState.WRITING) throw new IOException("Cannot write to WavFile instance");
+		if (ioState != IOState.WRITING) throw new IOException("Cannot write to uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToWrite ; f++)
 		{
@@ -544,7 +545,7 @@ public class WavFile
 
 	public int writeFrames(long[][] sampleBuffer, int offset, int numFramesToWrite) throws IOException, WavFileException
 	{
-		if (ioState != IOState.WRITING) throw new IOException("Cannot write to WavFile instance");
+		if (ioState != IOState.WRITING) throw new IOException("Cannot write to uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToWrite ; f++)
 		{
@@ -568,7 +569,7 @@ public class WavFile
 
 	public int readFrames(double[] sampleBuffer, int offset, int numFramesToRead) throws IOException, WavFileException
 	{
-		if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
+		if (ioState != IOState.READING) throw new IOException("Cannot read from uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToRead ; f++)
 		{
@@ -593,7 +594,7 @@ public class WavFile
 
 	public int readFrames(double[][] sampleBuffer, int offset, int numFramesToRead) throws IOException, WavFileException
 	{
-		if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
+		if (ioState != IOState.READING) throw new IOException("Cannot read from uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToRead ; f++)
 		{
@@ -615,7 +616,7 @@ public class WavFile
 
 	public int writeFrames(double[] sampleBuffer, int offset, int numFramesToWrite) throws IOException, WavFileException
 	{
-		if (ioState != IOState.WRITING) throw new IOException("Cannot write to WavFile instance");
+		if (ioState != IOState.WRITING) throw new IOException("Cannot write to uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToWrite ; f++)
 		{
@@ -640,7 +641,7 @@ public class WavFile
 
 	public int writeFrames(double[][] sampleBuffer, int offset, int numFramesToWrite) throws IOException, WavFileException
 	{
-		if (ioState != IOState.WRITING) throw new IOException("Cannot write to WavFile instance");
+		if (ioState != IOState.WRITING) throw new IOException("Cannot write to uk.co.labbookpages.WavFile instance");
 
 		for (int f=0 ; f<numFramesToWrite ; f++)
 		{

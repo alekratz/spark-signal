@@ -4,6 +4,7 @@ import java.io.File
 
 import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.SparkContext._
+import uk.co.labbookpages.WavFile
 
 object SparkSignal {
   def main(args: Array[String]): Unit = {
