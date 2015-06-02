@@ -181,6 +181,7 @@ public class WavFile
 		wavFile.iStream = stream;
 
 		// Read the first 12 bytes of the file
+		long fileSize = wavFile.iStream.available();
 		int bytesRead = wavFile.iStream.read(wavFile.buffer, 0, 12);
 		if (bytesRead != 12) throw new WavFileException("Not enough wav file bytes for header");
 
@@ -194,8 +195,8 @@ public class WavFile
 		if (riffTypeID != RIFF_TYPE_ID) throw new WavFileException("Invalid Wav Header data, incorrect riff type ID");
 
 		// Check that the file size matches the number of bytes listed in header
-		if (wavFile.iStream.available() != chunkSize+8) {
-			throw new WavFileException("Header chunk size (" + chunkSize + ") does not match file size (" + wavFile.iStream.available() + ")");
+		if (fileSize != chunkSize+8) {
+			throw new WavFileException("Header chunk size (" + chunkSize + ") does not match file size (" + fileSize + ")");
 		}
 
 		boolean foundFormat = false;
