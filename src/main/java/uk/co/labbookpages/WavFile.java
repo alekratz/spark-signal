@@ -8,9 +8,6 @@ package uk.co.labbookpages;
 // http://www.blitter.com/~russtopia/MIDI/~jglatt/tech/wave.htm
 
 // Version 1.0
-
-import org.json4s.FileInput;
-
 import java.io.*;
 
 public class WavFile
