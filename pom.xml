@@ -26,21 +26,7 @@
             <version>1.2.0</version>
         </dependency>
     </dependencies>
-
-    <!--
-    <build>
-        <sourceDirectory>src/main/scala</sourceDirectory>
-        <testSourceDirectory>src/test/scala</testSourceDirectory>
-
-        <plugins>
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>3.2.0</version>
-            </plugin>
-        </plugins>
-    </build>
-    -->
+    
     <build>
         <plugins>
             <plugin>
