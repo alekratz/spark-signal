@@ -9,11 +9,13 @@ package uk.co.labbookpages;
 
 // Version 1.0
 
+import org.json4s.FileInput;
+
 import java.io.*;
 
 public class WavFile
 {
-	private enum IOState {READING, WRITING, CLOSED};
+	private enum IOState {READING, WRITING, CLOSED}
 	private final static int BUFFER_SIZE = 4096;
 
 	private final static int FMT_CHUNK_ID = 0x20746D66;
@@ -21,12 +23,12 @@ public class WavFile
 	private final static int RIFF_CHUNK_ID = 0x46464952;
 	private final static int RIFF_TYPE_ID = 0x45564157;
 
-	private File file;						// File that will be read from or written to
+	//private File file;						// File that will be read from or written to
 	private IOState ioState;				// Specifies the IO State of the Wav File (used for snaity checking)
 	private int bytesPerSample;			// Number of bytes required to store a single sample
 	private long numFrames;					// Number of frames within the data section
-	private FileOutputStream oStream;	// Output stream used for writting data
-	private FileInputStream iStream;		// Input stream used for reading data
+	private OutputStream oStream;	// Output stream used for writting data
+	private InputStream iStream;		// Input stream used for reading data
 	private double floatScale;				// Scaling factor used for int <-> float conversion				
 	private double floatOffset;			// Offset factor used for int <-> float conversion				
 	private boolean wordAlignAdjust;		// Specify if an extra byte at the end of the data chunk is required for word alignment
@@ -79,7 +81,7 @@ public class WavFile
 	{
 		// Instantiate new Wavfile and initialise
 		WavFile wavFile = new WavFile();
-		wavFile.file = file;
+		//wavFile.file = file;
 		wavFile.numChannels = numChannels;
 		wavFile.numFrames = numFrames;
 		wavFile.sampleRate = sampleRate;
@@ -169,14 +171,17 @@ public class WavFile
 		return wavFile;
 	}
 
-	public static WavFile openWavFile(File file) throws IOException, WavFileException
+	public static WavFile openWavFile(File file) throws IOException, WavFileException {
+		return openWavStream(new FileInputStream(file));
+	}
+
+	public static WavFile openWavStream(InputStream stream) throws IOException, WavFileException
 	{
 		// Instantiate new Wavfile and store the file reference
 		WavFile wavFile = new WavFile();
-		wavFile.file = file;
 
 		// Create a new file input stream for reading file data
-		wavFile.iStream = new FileInputStream(file);
+		wavFile.iStream = stream;
 
 		// Read the first 12 bytes of the file
 		int bytesRead = wavFile.iStream.read(wavFile.buffer, 0, 12);
@@ -192,8 +197,8 @@ public class WavFile
 		if (riffTypeID != RIFF_TYPE_ID) throw new WavFileException("Invalid Wav Header data, incorrect riff type ID");
 
 		// Check that the file size matches the number of bytes listed in header
-		if (file.length() != chunkSize+8) {
-			throw new WavFileException("Header chunk size (" + chunkSize + ") does not match file size (" + file.length() + ")");
+		if (wavFile.iStream.available() != chunkSize+8) {
+			throw new WavFileException("Header chunk size (" + chunkSize + ") does not match file size (" + wavFile.iStream.available() + ")");
 		}
 
 		boolean foundFormat = false;
@@ -690,65 +695,10 @@ public class WavFile
 
 	public void display(PrintStream out)
 	{
-		out.printf("File: %s\n", file);
+		//out.printf("File: %s\n", file);
 		out.printf("Channels: %d, Frames: %d\n", numChannels, numFrames);
 		out.printf("IO State: %s\n", ioState);
 		out.printf("Sample Rate: %d, Block Align: %d\n", sampleRate, blockAlign);
 		out.printf("Valid Bits: %d, Bytes per sample: %d\n", validBits, bytesPerSample);
-	}
-
-	public static void main(String[] args)
-	{
-		if (args.length < 1)
-		{
-			System.err.println("Must supply filename");
-			System.exit(1);
-		}
-
-		try
-		{
-			for (String filename : args)
-			{
-				WavFile readWavFile = openWavFile(new File(filename));
-				readWavFile.display();
-
-				long numFrames = readWavFile.getNumFrames();
-				int numChannels = readWavFile.getNumChannels();
-				int validBits = readWavFile.getValidBits();
-				long sampleRate = readWavFile.getSampleRate();
-
-				WavFile writeWavFile = newWavFile(new File("out.wav"), numChannels, numFrames, validBits, sampleRate);
-
-				final int BUF_SIZE = 5001;
-
-//				int[] buffer = new int[BUF_SIZE * numChannels];
-//				long[] buffer = new long[BUF_SIZE * numChannels];
-				double[] buffer = new double[BUF_SIZE * numChannels];
-
-				int framesRead = 0;
-				int framesWritten = 0;
-
-				do
-				{
-					framesRead = readWavFile.readFrames(buffer, BUF_SIZE);
-					framesWritten = writeWavFile.writeFrames(buffer, BUF_SIZE);
-					System.out.printf("%d %d\n", framesRead, framesWritten);
-				}
-				while (framesRead != 0);
-				
-				readWavFile.close();
-				writeWavFile.close();
-			}
-
-			WavFile writeWavFile = newWavFile(new File("out2.wav"), 1, 10, 23, 44100);
-			double[] buffer = new double[10];
-			writeWavFile.writeFrames(buffer, 10);
-			writeWavFile.close();
-		}
-		catch (Exception e)
-		{
-			System.err.println(e);
-			e.printStackTrace();
-		}
 	}
 }
