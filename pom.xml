@@ -8,6 +8,13 @@
     <artifactId>spark-signal</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <developers>
+        <developer>
+            <name>Alek Ratzloff</name>
+            <email>alekratz@gmail.com</email>
+        </developer>
+    </developers>
+
     <properties>
         <scala.binary.version>2.10</scala.binary.version>
         <scala.version>2.10.4</scala.version>
