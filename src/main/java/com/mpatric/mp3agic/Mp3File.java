@@ -1,12 +1,19 @@
 package com.mpatric.mp3agic;
 
+import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.input.PortableDataStream;
+import scala.reflect.ClassTag;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Mp3File extends FileWrapper {
+public class Mp3File {
 
 	private static final int DEFAULT_BUFFER_LENGTH = 65536;
 	private static final int MINIMUM_BUFFER_LENGTH = 40;
@@ -15,6 +22,8 @@ public class Mp3File extends FileWrapper {
 	private static final int XING_MARKER_OFFSET_3 = 36;
 
 	protected int bufferLength;
+	private SparkContext context;
+	private int streamLength = 0;
 	private int xingOffset = -1;
 	private int startOffset = -1;
 	private int endOffset = -1;
@@ -38,64 +47,54 @@ public class Mp3File extends FileWrapper {
 	protected Mp3File() {
 	}
 
-	public Mp3File(String filename) throws IOException, UnsupportedTagException, InvalidDataException {
-		this(filename, DEFAULT_BUFFER_LENGTH, true);
+	public Mp3File(SparkContext sc, String filename) throws IOException, UnsupportedTagException, InvalidDataException {
+		this(sc, filename, DEFAULT_BUFFER_LENGTH, true);
 	}
 
-	public Mp3File(String filename, int bufferLength) throws IOException, UnsupportedTagException, InvalidDataException {
-		this(filename, bufferLength, true);
+	public Mp3File(SparkContext sc, String filename, int bufferLength) throws IOException, UnsupportedTagException, InvalidDataException {
+		this(sc, filename, bufferLength, true);
 	}
 	
-	public Mp3File(String filename, boolean scanFile) throws IOException, UnsupportedTagException, InvalidDataException {
-		this(filename, DEFAULT_BUFFER_LENGTH, scanFile);
+	public Mp3File(SparkContext sc, String filename, boolean scanFile) throws IOException, UnsupportedTagException, InvalidDataException {
+		this(sc, filename, DEFAULT_BUFFER_LENGTH, scanFile);
 	}
 	
-	public Mp3File(String filename, int bufferLength, boolean scanFile) throws IOException, UnsupportedTagException, InvalidDataException {		
-		super(filename);
-		init(bufferLength, scanFile);
-	}
+	public Mp3File(SparkContext sc, String filename, int bufferLength, boolean scanFile) throws IOException, UnsupportedTagException, InvalidDataException {
+		if (bufferLength < MINIMUM_BUFFER_LENGTH + 1)
+			throw new IllegalArgumentException("Buffer too small");
+		assert sc != null;
 
-	public Mp3File(File file) throws IOException, UnsupportedTagException, InvalidDataException {
-		this(file, DEFAULT_BUFFER_LENGTH, true);
-	}
-	
-	public Mp3File(File file, int bufferLength) throws IOException, UnsupportedTagException, InvalidDataException {
-		this(file, bufferLength, true);
-	}
-	
-	public Mp3File(File file, int bufferLength, boolean scanFile) throws IOException, UnsupportedTagException, InvalidDataException {
-		super(file);
-		init(bufferLength, scanFile);
-	}
-
-	private void init(int bufferLength, boolean scanFile) throws IOException, UnsupportedTagException, InvalidDataException {
-		if (bufferLength < MINIMUM_BUFFER_LENGTH + 1) throw new IllegalArgumentException("Buffer too small");
-		
 		this.bufferLength = bufferLength;
 		this.scanFile = scanFile;
-		
-		RandomAccessFile randomAccessFile = new RandomAccessFile(file.getPath(), "r");
+		// Don't tell anyone I wrote this line of code
+		// it was physically painful to write
+		JavaPairRDD<String, PortableDataStream> mp3RDD = new JavaPairRDD<String, PortableDataStream>(
+				sc.binaryFiles(filename, sc.defaultMinPartitions()),
+				new ClassTag<String>(), new ClassTag<PortableDataStream>());
+
+		InputStream stream = mp3RDD.first()._2().open();
+		streamLength = stream.available();
 		
 		try {
-			initId3v1Tag(randomAccessFile);
-			scanFile(randomAccessFile);
+			initId3v1Tag(stream);
+			scanFile(stream);
 			if (startOffset < 0) {
 				throw new InvalidDataException("No mpegs frames found");
 			}
-			initId3v2Tag(randomAccessFile);
+			initId3v2Tag(stream);
 			if (scanFile) {
-				initCustomTag(randomAccessFile);
+				initCustomTag(stream);
 			}
 		} finally {
-			randomAccessFile.close();
+			stream.close();
 		}
 	}
 	
-	protected int preScanFile(RandomAccessFile file) {
+	protected int preScanFile(InputStream stream) {
 		byte[] bytes = new byte[AbstractID3v2Tag.HEADER_LENGTH];
 		try {
-			file.seek(0);
-			int bytesRead = file.read(bytes, 0, AbstractID3v2Tag.HEADER_LENGTH);
+			seekStream(stream, 0);
+			int bytesRead = stream.read(bytes, 0, AbstractID3v2Tag.HEADER_LENGTH);
 			if (bytesRead == AbstractID3v2Tag.HEADER_LENGTH) {
 				try {
 					ID3v2TagFactory.sanityCheckTag(bytes);
@@ -112,14 +111,14 @@ public class Mp3File extends FileWrapper {
 		return 0;
 	}
 
-	private void scanFile(RandomAccessFile file) throws IOException, InvalidDataException {
+	private void scanFile(InputStream stream) throws IOException, InvalidDataException {
 		byte[] bytes = new byte[bufferLength];
-		int fileOffset = preScanFile(file);
-		file.seek(fileOffset);
+		int fileOffset = preScanFile(stream);
+		seekStream(stream, fileOffset);
 		boolean lastBlock = false;
 		int lastOffset = fileOffset;
 		while (!lastBlock) {
-			int bytesRead = file.read(bytes, 0, bufferLength);
+			int bytesRead = stream.read(bytes, 0, bufferLength);
 			if (bytesRead < bufferLength) lastBlock = true;
 			if (bytesRead >= MINIMUM_BUFFER_LENGTH) {
 				while (true) {
@@ -134,7 +133,7 @@ public class Mp3File extends FileWrapper {
 						}
 						offset = scanBlock(bytes, bytesRead, fileOffset, offset);
 						fileOffset += offset;
-						file.seek(fileOffset);
+						seekStream(stream, fileOffset);
 						break;
 					} catch (InvalidDataException e) {
 						if (frameCount < 2) {
@@ -145,7 +144,7 @@ public class Mp3File extends FileWrapper {
 							lastBlock = false;
 							fileOffset = lastOffset + 1;
 							if (fileOffset == 0) throw new InvalidDataException("Valid start of mpeg frames not found", e);
-							file.seek(fileOffset);
+							seekStream(stream, fileOffset);
 							break;
 						}
 						return;
@@ -236,7 +235,7 @@ public class Mp3File extends FileWrapper {
 	}
 	
 	private void addBitrate(int bitrate) {
-		Integer key = new Integer(bitrate);
+		Integer key = bitrate;
 		MutableInteger count = bitrates.get(key);
 		if (count != null) {
 			count.increment();
@@ -246,10 +245,10 @@ public class Mp3File extends FileWrapper {
 		this.bitrate = ((this.bitrate * (frameCount - 1)) + bitrate) / frameCount;
 	}
 	
-	private void initId3v1Tag(RandomAccessFile file) throws IOException {
+	private void initId3v1Tag(InputStream stream) throws IOException {
 		byte[] bytes = new byte[ID3v1Tag.TAG_LENGTH];
-		file.seek(getLength() - ID3v1Tag.TAG_LENGTH);
-		int bytesRead = file.read(bytes, 0, ID3v1Tag.TAG_LENGTH);
+		seekStream(stream, getLength() - ID3v1Tag.TAG_LENGTH);
+		int bytesRead = stream.read(bytes, 0, ID3v1Tag.TAG_LENGTH);
 		if (bytesRead < ID3v1Tag.TAG_LENGTH) throw new IOException("Not enough bytes read");
 		try {
 			id3v1Tag = new ID3v1Tag(bytes);
@@ -258,7 +257,7 @@ public class Mp3File extends FileWrapper {
 		}
 	}
 	
-	private void initId3v2Tag(RandomAccessFile file) throws IOException, UnsupportedTagException, InvalidDataException {
+	private void initId3v2Tag(InputStream stream) throws IOException, UnsupportedTagException, InvalidDataException {
 		if (xingOffset == 0 || startOffset == 0) {
 			id3v2Tag = null;
 		} else {
@@ -266,8 +265,8 @@ public class Mp3File extends FileWrapper {
 			if (hasXingFrame()) bufferLength = xingOffset;
 			else bufferLength = startOffset;
 			byte[] bytes = new byte[bufferLength];
-			file.seek(0);
-			int bytesRead = file.read(bytes, 0, bufferLength);
+			seekStream(stream, 0);
+			int bytesRead = stream.read(bytes, 0, bufferLength);
 			if (bytesRead < bufferLength) throw new IOException("Not enough bytes read");
 			try {
 				id3v2Tag = ID3v2TagFactory.createTag(bytes);
@@ -277,7 +276,7 @@ public class Mp3File extends FileWrapper {
 		}
 	}
 	
-	private void initCustomTag(RandomAccessFile file) throws IOException {
+	private void initCustomTag(InputStream stream) throws IOException {
 		int bufferLength = (int)(getLength() - (endOffset + 1));
 		if (hasId3v1Tag()) bufferLength -= ID3v1Tag.TAG_LENGTH;
 		if (bufferLength <= 0) {
@@ -285,11 +284,19 @@ public class Mp3File extends FileWrapper {
 		}
 		else {
 			customTag = new byte[bufferLength];
-			file.seek(endOffset + 1);
-			int bytesRead = file.read(customTag, 0, bufferLength);
+			seekStream(stream, endOffset + 1);
+			int bytesRead = stream.read(customTag, 0, bufferLength);
 			if (bytesRead < bufferLength) throw new IOException("Not enough bytes read");
 		}
 	}
+
+	private void seekStream(InputStream stream, int location) throws IOException {
+		stream.reset();
+		if(location > 0)
+			stream.skip(location);
+	}
+
+	public int getLength() { return streamLength; }
 
 	public int getFrameCount() {
 		return frameCount;
@@ -415,7 +422,8 @@ public class Mp3File extends FileWrapper {
 	public void removeCustomTag() {
 		this.customTag = null;
 	}
-	
+
+	/*
 	public void save(String newFilename) throws IOException, NotSupportedException {
 		if (file.compareTo(new File(newFilename)) == 0) {
 			throw new IllegalArgumentException("Save filename same as source filename");
@@ -460,4 +468,5 @@ public class Mp3File extends FileWrapper {
 			randomAccessFile.close();
 		}
 	}
+	*/
 }
