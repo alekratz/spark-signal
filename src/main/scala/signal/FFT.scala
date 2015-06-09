@@ -81,7 +81,7 @@ object FFT {
    *  Currently, the FFT is computed using the JTransforms library.
    *  
    *  @param x signal to transform. `x` must be available as a `Seq[Double]`
-   *  @tparam repr representation of the signal.  it must be transformable
+   *  @tparam Repr representation of the signal.  it must be transformable
    *    to a `Seq[Double]`
    *    
    *  @return FFT of the signal */
@@ -109,13 +109,13 @@ object FFT {
   (implicit hSeq: Repr => Seq[Complex],
    bf: CanBuildFrom[Repr, Complex, Repr]): Repr = {
     val fft = new DoubleFFT_1D(h.length)
-    val a = h.map(c => List(c.real, c.imag)).flatten.toArray
+    val a = h.flatMap(c => List(c.real, c.imag)).toArray
     fft.complexInverse(a, true)
 
     // create a builder to return the same collection type
     val builder = bf(h)
     builder ++= new PackedComplexSeq(a)
-    builder.result
+    builder.result()
   }
   
 }
