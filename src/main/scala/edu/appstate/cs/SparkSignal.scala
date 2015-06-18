@@ -2,6 +2,7 @@ package edu.appstate.cs
 
 import java.io.File
 
+import com.mpatric.mp3agic.Mp3File
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.SparkContext._
@@ -25,18 +26,30 @@ object SparkSignal {
   }
 
   def main(args: Array[String]): Unit = {
-    if(args.length != 1) {
-      System.err.println("usage: SparkSignal filename.wav")
+    if(args.length == 0) {
+      System.err.println("usage: SparkSignal filename")
       System.exit(1)
     }
+    println("opening " + args.length + " files")
+
     val appName = "ScalaSignal"
     val conf = new SparkConf().setAppName(appName)
     val sc = new SparkContext(conf)
 
     // run through all of the paths specified on the command line
     for(path <- args) {
-      val wavBuffer = loadWavHDFS(sc, path)
-      println("loaded an RDD of wav file " + path + " and size " + wavBuffer.count())
+      println("opening " + path)
+
+      path.split("\\.").last match {
+        case "mp3" => {
+          val mp3 = new Mp3File(sc, path);
+          println("loaded an MP3 file " + path + " that is " + mp3.getLengthInMilliseconds + " milliseconds long")
+        }
+        case "wav" => {
+          val wavBuffer = loadWavHDFS(sc, path)
+          println("loaded an RDD of wav file " + path + " and size " + wavBuffer.count())
+        }
+      }
     }
   }
 }

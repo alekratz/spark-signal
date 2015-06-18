@@ -2,14 +2,11 @@ package com.mpatric.mp3agic;
 
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.input.PortableDataStream;
-import scala.reflect.ClassTag;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,7 +19,7 @@ public class Mp3File {
 	private static final int XING_MARKER_OFFSET_3 = 36;
 
 	protected int bufferLength;
-	private SparkContext context;
+	private JavaSparkContext context;
 	private int streamLength = 0;
 	private int xingOffset = -1;
 	private int startOffset = -1;
@@ -66,12 +63,13 @@ public class Mp3File {
 
 		this.bufferLength = bufferLength;
 		this.scanFile = scanFile;
-		// Don't tell anyone I wrote this line of code
-		// it was physically painful to write
-		JavaPairRDD<String, PortableDataStream> mp3RDD = new JavaPairRDD<String, PortableDataStream>(
-				sc.binaryFiles(filename, sc.defaultMinPartitions()),
-				new ClassTag<String>(), new ClassTag<PortableDataStream>());
 
+		// set up the java context
+		JavaSparkContext jc = new JavaSparkContext(sc);
+		context = jc;
+
+		// Load the binary file
+		JavaPairRDD<String, PortableDataStream> mp3RDD = jc.binaryFiles(filename);
 		InputStream stream = mp3RDD.first()._2().open();
 		streamLength = stream.available();
 		
