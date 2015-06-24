@@ -19,14 +19,15 @@ object SparkSignal {
     // Load it into memory
     val wavFile = WavFile.openWavStream(stream)
     val frameCount = wavFile.getNumFrames.toInt
+    println("loading wav with frame count of " + frameCount)
     val buffer = Array.ofDim[Double](frameCount)
     wavFile.readFrames(buffer, frameCount)
     sc.parallelize(buffer)
   }
 
   def main(args: Array[String]): Unit = {
-    if(args.length != 1) {
-      System.err.println("usage: SparkSignal filename.wav")
+    if(args.length < 1) {
+      System.err.println("usage: SparkSignal file1.wav [ file2.wav ... ]")
       System.exit(1)
     }
     val appName = "ScalaSignal"
