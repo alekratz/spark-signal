@@ -1,6 +1,8 @@
 # spark-signal
 Signal processing using Apache Spark
 
+Requires Java JDK 1.7.0 or higher.
+
 # License
 GPL v3
 
