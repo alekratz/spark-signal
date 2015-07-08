@@ -24,7 +24,7 @@ cleanup() {
 
 ### Script variables ###
 classname='edu.appstate.cs.SparkSignal'
-jarfile='spark-signal-1.0-SNAPSHOT.jar'
+jarfile='target/spark-signal-1.0-SNAPSHOT.jar'
 data_dir='/hdfs/bee'
 hdfs_tmp_dir='/hdfs/tmp'
 local_tmp_dir='/tmp'
@@ -68,3 +68,4 @@ spark-submit --class $classname $jarfile $hdfs_files
 # Perform cleanup
 echo "Cleaning up..."
 cleanup
+
