@@ -6,7 +6,7 @@ Requires Java JDK 1.7.0 or higher.
 spark-signal is currently a work in progress for cleaning up audio data collected from beehives.
 
 Here is a goal checksheet for what needs to be done to achieve alpha status:
-~~* Load wav files as RDDs~~
+* ~~Load wav files as RDDs~~
 * Generate a high-pass filter using RDDs
 * Apply filters using RDDs
 
